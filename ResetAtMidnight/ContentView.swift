@@ -8,7 +8,7 @@
 
 import SwiftUI
 import Combine
-import Foundation
+import Foundation 
 
 //****************************************************************************************************
 
@@ -22,12 +22,9 @@ extension Date {
     var midnight: Date {
         return Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: self)!
     }
-    
-    
 }
 
 //****************************************************************************************************
-
 
 
 struct ContentView: View {
@@ -41,7 +38,8 @@ struct ContentView: View {
     var body: some View {
        
         VStack {
-        
+            
+            // For some reason removing this stops the updateing of the timer
             if Tomorrow == Today && NewDay == true && CardEnabled == true {
             }
 
@@ -83,7 +81,7 @@ struct ContentView: View {
 
         }.padding(21.0)
         
-        //This timer checks if its a new day: If tommorrow is smaller then today, then make the newday true
+        //Constant New Day Checker. This timer checks if it's a new day: If tommorrow is smaller then today, then make the newday true
         .onReceive(timer) { _ in
            Today = Date()
             
@@ -122,62 +120,6 @@ struct ContentView: View {
     }
 }
         
-        
-        
-        
-//        VStack {
-//          DateCheck1()
-//            Text("\(self.userDefaultSettings.username)")
-//        }
-//
-//    }
-    
-//      class UserDefaultSettings: ObservableObject {
-//
-//          @Published var username: String {
-//             didSet {
-//                 UserDefaults.standard.set(username, forKey: "username")
-//             }
-//          }
-//
-//
-//          @Published var marriagestatus: String {
-//             didSet {
-//                 UserDefaults.standard.set(marriagestatus, forKey: "marriagestatus")
-//             }
-//          }
-//          public var marriagestatuss = ["Single", "Married", "Separated", "Divorced"]
-//
-//
-//          /// This is your setter for the birthday date
-//          @Published var bdDay: Date {
-//             didSet {
-//                 UserDefaults.standard.set(bdDay.timeIntervalSince1970, forKey: "bdDay")
-//             }
-//          }
-//
-//          /// This is your formatted date as you prefer
-//          var formattedBirthday: String {
-//             let dateFormatter = DateFormatter()
-//             dateFormatter.dateStyle = .full
-//             return dateFormatter.string(from: bdDay)
-//          }
-//
-//          init() {
-//             self.username = UserDefaults.standard.object(forKey: "username") as? String ?? ""
-//             self.marriagestatus = UserDefaults.standard.object(forKey: "marriagestatus") as? String ?? "Single"
-//             self.bdDay = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "bdDay"))
-//            print(self.bdDay)
-//          }
-
-//      }
-
-
-//}
-    
-
-    
-  
 
 //****************************************************************************************************
   
