@@ -2,127 +2,125 @@
 //  ContentView.swift
 //  ResetAtMidnight
 //
-//  Created by Mik on 2020-10-24.
+//  Created by Mik on 2020-10-27.
 //
 
-
 import SwiftUI
-import Combine
-import Foundation 
 
 //****************************************************************************************************
 
 extension Date {
     
     static var tomorrow:  Date { return Date().dayAfter }
-
+    static var early:  Date { return Date().earlier } // Debugging only
+        
     var dayAfter: Date {
         return Calendar.current.date(byAdding: .day, value: 1, to: midnight)!
     }
     var midnight: Date {
         return Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: self)!
     }
+    
+    // Debugging only
+    var earlier: Date {
+        return Calendar.current.date(bySettingHour: 0, minute: 0, second: 0, of: self)!
+    }
 }
 
 //****************************************************************************************************
-
 
 struct ContentView: View {
     @State var Today = Date()
-    @State var NewDay: Bool = UserDefaults.standard.bool(forKey: "NewDay")
-    @State var Tomorrow = Date(timeIntervalSinceNow: UserDefaults.standard.double(forKey: "Tomorrow"))
-    @State var CardEnabled: Bool = UserDefaults.standard.bool(forKey: "CardEnabled")
-    
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State var TomorrowDate = Date() // iOS can't save Dates into userdefaults, so this is made a a temp var.
+    @State var TomorrowString = UserDefaults.standard.string(forKey: "Tomorrow") ?? "No Date Saved" // Actually saves tomorrow as a string
+    @State var NewDay = UserDefaults.standard.bool(forKey: "NewDay") // Remember if today is actually a new day
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect() // Used as an updater to check if
     
     var body: some View {
-       
-        VStack {
+        VStack(alignment: .leading) {
             
-            // For some reason removing this stops the updateing of the timer
-            if Tomorrow == Today && NewDay == true && CardEnabled == true {
-            }
-
-            if CardEnabled == true {
+            // Debugging only
+            if Today >= TomorrowDate {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16).padding().foregroundColor(.green)
-                    Button(action: {
-                        CheckNewDay()
-                    }) {
-                        Text("Mark today as done")
-                    }
+                    Circle().foregroundColor(.green).padding()
+                    Text(" New Day")
                 }
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16).padding().foregroundColor(.red).cornerRadius(20)
-                    Text("Not New Day\n")
+                    Circle().foregroundColor(.red).padding()
+                    Text("Not New Day")
                 }
             }
             
+            // Debugging only
+            Text("Today is:\n" + "\(Today.description(with: Locale(identifier: "current")))")
+                .padding()
+            Text("Tomorrow is:\n" + "\(TomorrowDate.description(with: Locale(identifier: "current")))")
+                .padding()
+            Text("Tomorrow Raw String:\n" + "\(TomorrowString)")
+                .padding()
             
+            // Stores Tomorrows Date
             Button(action: {
-                CardEnabled = true
-                NewDay = true
-                UserDefaults.standard.set(CardEnabled, forKey: "CardEnabled")
-                UserDefaults.standard.set(NewDay, forKey: "NewDay")
+                TomorrowDate = Date().dayAfter
+                ConvertTomorrowStringtoDate()
+                StoreTomorrow()
+                NewDay = false
+                
             }) {
-                Text("Set NewDay & CaredEnabled as true\n")
-            }
+                Text("Store Tomorrow")
+            }.padding()
             
-            Text("Today " + "\(Date().description(with: Locale(identifier: "en-US")))").padding()
-            Text("\(Today)").padding()
-
-            Text("Tomorrow Code " + "\(Date().dayAfter.description(with: Locale(identifier: "en-US")))").padding()
-            Text("Tomorrow Saved " + "\(Tomorrow.description(with: Locale(identifier: "en-US")))").padding()
-
+            // Debugging only
+            Button(action: {
+                TomorrowDate = Date().earlier
+                
+            }) {
+                Text("Reset tomorrow to an earlier time")
+            }.padding()
             
-            Text ("Card Enabled: " + "\(String(CardEnabled))")
-            Text ("Newday: " + "\(String(NewDay))")
-
-        }.padding(21.0)
+        }.padding()
         
-        //Constant New Day Checker. This timer checks if it's a new day: If tommorrow is smaller then today, then make the newday true
+        .onAppear() {
+            ConvertTomorrowStringtoDate() // Convert Tomorrow String as a Date()
+        }
+        
         .onReceive(timer) { _ in
-           Today = Date()
-            
-           if Today >= Tomorrow {
+            Today = Date() // Used to update Todays Date consistently becuase iOS won't do this by default
+            if Today >= TomorrowDate {
                 NewDay = true
-                print(Date(timeIntervalSinceNow: 0 * 60))
-                print("New Day")
-                print(Today)
-                print(Tomorrow)
-                print(Date().dayAfter)
                 UserDefaults.standard.set(NewDay, forKey: "NewDay")
-           }
-//
-//           if NewDay == true {
-//                CardEnabled = true
-//                UserDefaults.standard.set(CardEnabled, forKey: "CardEnabled")
-//
-//           }
-       
-       }
-    }
-    
-    
-    func CheckNewDay() {
-        
-        if NewDay == true {
-            CardEnabled = false
-            Tomorrow = Date().dayAfter
-            NewDay = false
-            
-            UserDefaults.standard.set(CardEnabled, forKey: "CardEnabled")
-            UserDefaults.standard.set(Date().dayAfter, forKey: "Tomorrow")
-            UserDefaults.standard.set(NewDay, forKey: "NewDay")
-
+                StoreTomorrow() // Convert Date into a String and save to CoreData
+            }
         }
     }
+    
+    func StoreTomorrow() {
+        let date = Date().dayAfter
+        let dff = DateFormatter()
+        dff.dateStyle = .medium
+        dff.timeStyle = .long
+        dff.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZZZ"
+        dff.locale = Locale(identifier: "current")
+        UserDefaults.standard.set(dff.string(from: date), forKey: "Tomorrow")
+        print("Stored \(dff.string(from: date)) into data")
+    }
+    
+     func ConvertTomorrowStringtoDate() {
+         let dateString = TomorrowString // the date string to be parsed
+         let df = DateFormatter()
+         df.locale = Locale(identifier: "current")
+         df.dateFormat = "yyyy-MM-dd HH:mm:ss ZZZZZ"
+         if let date = df.date(from: dateString) {
+            TomorrowDate = date
+         } else {
+             print("Unable to parse date string")
+         }
+    }
 }
-        
 
 //****************************************************************************************************
-  
+
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
