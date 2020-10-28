@@ -57,7 +57,7 @@ struct ContentView: View {
                 .padding()
             Text("Tomorrow is:\n" + "\(TomorrowDate.description(with: Locale(identifier: "current")))")
                 .padding()
-            Text("Tomorrow Raw String:\n" + "\(TomorrowString)")
+            Text("Tomorrow Raw String:\n" + "\(TomorrowString)" + "\n(Doesn't save on first load)")
                 .padding()
             
             // Stores Tomorrows Date
